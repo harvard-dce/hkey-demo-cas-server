@@ -23,12 +23,31 @@ class Huser(AbstractUser):
         verbose_name="defaultPrincipalId",
         unique=True,
     )
+    user = models.CharField(
+        max_length=16, help_text="User", verbose_name="user", unique=True, null=True, blank=True, default=None
+    )
+
+    netId = models.CharField(
+        max_length=16, help_text="netID", verbose_name="netId", unique=True, null=True, blank=True, default=None
+    )
 
     memberOf = models.ManyToManyField(
         Grouper,
         through="MemberOf",
         through_fields=("person", "group"),
     )
+
+    @property
+    def givenName(self):
+        return self.first_name
+
+    @property
+    def sn(self):
+        return self.last_name
+
+    @property
+    def mail(self):
+        return self.email
 
     def __str__(self):
         return "{} {} - {}".format(self.first_name, self.last_name, list(self.memberOf.all()))
