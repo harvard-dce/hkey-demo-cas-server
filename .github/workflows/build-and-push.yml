@@ -1,27 +1,56 @@
-name: Build and Publish Docker image
+# this will build and push an image to an ECR repo identified by
+# the REPOSITORY_NAME env setting. Any branch matching the pattern
+# */*, e.g., bugfix/some-bug, will be built and the resulting image
+# tagged, e.g., bugfix-some-bug
 
+name: Build and Push Image to ECR
 on:
   workflow_dispatch:
   push:
-    branches: [master]
+    branches: [master, '*/*']
 
 env:
   REPOSITORY_NAME: hdce/hkey-demo-cas-server
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build_and_push:
     runs-on: ubuntu-latest
     steps:
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
+      - name: Check out the repo
+        uses: actions/checkout@v4
+        id: checkout
+
+      - name: dump context
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: crazy-max/ghaction-dump-context@v2
+
+      - name: Get Porta Version Tag
+        shell: bash
+        id: porta_version_tag
+        # we only want to add this to our image tags for the this specific branch
+        if: ${{ github.ref_name == 'master' }}
+        run: echo "porta_version_tag=$(python -m porta.version)" >> $GITHUB_OUTPUT
+
+      - name: Set Image Tags
+        shell: bash
+        id: image_tags
+        # trailing comma is OK here if porta_version_tag not defined
+        run: echo "image_tags=sha-${{ github.sha }},${{ steps.porta_version_tag.outputs.porta_version_tag }}" >> $GITHUB_OUTPUT
+
+      - name: Build + Push
+        uses: harvard-edtech/dce-ecr-action@v1.4
+        id: build_and_push
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_AUTH_TOKEN }}
-      - name: Build and push
-        id: docker_build
-        uses: docker/build-push-action@v2
-        with:
-          push: true
-          tags: ${{ env.REPOSITORY_NAME }}:latest
-      - name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
+          access_key_id: ${{ secrets.PUSH_TO_ECR_AWS_ACCESS_KEY_ID }}
+          secret_access_key: ${{ secrets.PUSH_TO_ECR_AWS_SECRET_ACCESS_KEY }}
+          account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+          repo: ${{ env.REPOSITORY_NAME }}
+          region: ${{ secrets.AWS_DEFAULT_REGION }}
+          tags: ${{ steps.image_tags.outputs.image_tags }}
+          add_branch_tag: true
+          slack_webhook_url: ${{ secrets.PUSH_TO_ECR_SLACK_NOTIFY_WEBHOOK_URL }}
+          dockerfile: docker/Dockerfile
