@@ -53,4 +53,4 @@ jobs:
           tags: ${{ steps.image_tags.outputs.image_tags }}
           add_branch_tag: true
           slack_webhook_url: ${{ secrets.PUSH_TO_ECR_SLACK_NOTIFY_WEBHOOK_URL }}
-          dockerfile: docker/Dockerfile
+          dockerfile: Dockerfile

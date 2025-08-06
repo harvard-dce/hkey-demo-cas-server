@@ -1,6 +1,6 @@
 FROM python:3.9-alpine
 
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONUNBUFFERED=1
 
 # update the base OS packages
 RUN apk update \
@@ -32,7 +32,7 @@ RUN python manage.py loaddata fixtures/hkey_memberof.json
 
 # HTTP version
 EXPOSE 9000
-CMD python manage.py runserver 0.0.0.0:9000
+CMD [ "python", "manage.py", "runserver", "0.0.0.0:9000" ]
 
 # HTTPS version
 # has problems

@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "hkey",
     "mama_cas",
-    #"sslserver",
+    # "sslserver",
 ]
 
 MIDDLEWARE = [
@@ -80,7 +80,7 @@ MAMA_CAS_SERVICES = [
     {
         "SERVICE": "^http?://.*",
         "CALLBACKS": [
-            # "mama_cas.callbacks.user_model_attributes",
+            "mama_cas.callbacks.user_model_attributes",
             "hkey.callbacks.user_model_attributes",
             "casdemoserver.views.custom_attributes",
         ],
