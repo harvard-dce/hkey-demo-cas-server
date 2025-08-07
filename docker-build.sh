@@ -3,6 +3,6 @@
 
 source .env
 
-docker build "$@" --no-cache --progress=plain -f Dockerfile -t hdce/hkey-demo-cas-server:scan-me -t hdce/hkey-demo-cas-server:upgrade .
+docker build "$@" --no-cache --progress=plain -f Dockerfile -t hdce/hkey-demo-cas-server:upgrade .
 
 
